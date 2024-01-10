@@ -3,18 +3,22 @@ import signupImage from '../components/assets/login-animation.gif';
 import { BiSolidShow } from "react-icons/bi";
 import { BiSolidHide } from "react-icons/bi";
 import { Link,useNavigate } from 'react-router-dom';
+import { convertToBase64 } from '../helpers/ImageToBase64';
+import axios from "axios"; 
+
 
 function Signup() {
   const  navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [data, setData] = useState({
+    image :"",
     username: "",
     phone: "",
     email: "",
     password: "",
     confirmpassword: "",
-    type: ""
+    type: "",
 
   })
   console.log(data);
@@ -35,35 +39,75 @@ function Signup() {
       }
     })
   }
-  const handleUploadProfileImage = (e) =>{
-    console.log(e.target.files[0]);
-  }
-  const handleSubmit = (e) =>{
-    e.preventDefault()
-    const {username,phone,email,password,confirmpassword,type} = data
-    if(username && phone && email && password && confirmpassword && type){
-      if(password === confirmpassword){
-        alert("Successful")
-        navigate("/login")
-      }
-      else{
-        alert("password and confirm password is not matching")
-      }
-    }
-    else{
-      alert("please enter required fields")
-    }
-  }
+  const handleUploadProfileImage =  async (e) =>{
+    const data = await convertToBase64(e.target.files[0])
+    console.log(data);
 
+    setData((preve)=>{
+      return{
+        ...preve,
+        image:data
+      }
+    })
+
+  }
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const { username, phone, email, password, confirmpassword, type } = data;
+  
+  //   if (username && phone && email && password && confirmpassword && type) {
+  //     if (password === confirmpassword) {
+  //       try {
+  //         const response = await axios.post("http://localhost:3000/api/register", data, {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         });
+  
+  //         const dataRes = response.data;
+  
+  //         if (dataRes.alert) {
+  //           alert("Registration successful");
+  //           navigate("/login");
+  //         } else {
+  //           alert("Registration failed");
+  //         }
+  //       } catch (error) {
+  //         console.error("Error during registration:", error);
+  //         alert("Registration failed");
+  //       }
+  //     } else {
+  //       alert("Password and confirm password do not match");
+  //     }
+  //   } else {
+  //     alert("Please enter all required fields");
+  //   }
+  // };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const res = await axios.post("http://localhost:3000/api/register", { ...data });
+  
+      if (res.status === 201) {
+        alert("Data added");
+        navigate('/login');
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Registration failed");
+    }
+  };
+  
   return (
     <>
       <div className='p-3 md:p-4 flex justify-center items-center h-screen'>
         <div className='w-full max-w-md bg-rose-200 p-4 flex flex-col  rounded'>
-          <div className='w-20 overflow-hidden rounded-full drop-shadow-md shadow-md m-auto relative'>
-            <img src={signupImage} className='w-full' alt='Signup Animation' />
+          <div className='w-20 h-20 overflow-hidden rounded-full drop-shadow-md shadow-md m-auto relative'>
+            <img src={data.image ? data.image :signupImage} className='w-full h-full' alt='Signup Animation' />
 
             <label htmlFor="profileImage">
-              <div className='absolute bottom-0 h-1/3 bg-slate-500 w-full text-center cursor-pointer'>
+              <div className='absolute bottom-0 h-1/3 bg-slate-500 bg-opacity-50 w-full text-center cursor-pointer'>
                 <p className='text-sm p-1 text-white'>Upload</p>
               </div>
               <input type="file" name="profileImage" accept='image/*' id="profileImage" className='hidden' onChange={handleUploadProfileImage}/>
